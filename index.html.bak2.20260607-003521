@@ -858,10 +858,10 @@ async function doSearch() {
 
   try {
     let apiUrl = `/api/search?q=${encodeURIComponent(query)}&format=json&categories=${currentCat}&language=de`;
-    // News: use tagesschau exclusively (has actual dates, current German news)
-    if (currentCat === 'news') apiUrl += '&engines=tagesschau';
+    // Force tagesschau for news (has actual dates)
+    if (currentCat === 'news') apiUrl += '&engines=tagesschau,bing_news,startpage_news';
     const tr = document.getElementById('timeRange');
-    if (tr && tr.value && currentCat !== 'news') apiUrl += `&time_range=${tr.value}`;
+    if (tr && tr.value) apiUrl += `&time_range=${tr.value}`;
     const resp = await fetch(apiUrl);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
