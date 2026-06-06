@@ -685,6 +685,11 @@ document.querySelectorAll('.cat-btn').forEach(b => {
     document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     currentCat = b.dataset.cat;
+    // Default to "day" for news
+    if (currentCat === 'news') {
+      const tr = document.getElementById('timeRange');
+      if (tr && !tr.value) tr.value = 'day';
+    }
     if (input.value.trim()) doSearch();
   });
 });
@@ -866,6 +871,16 @@ async function doSearch() {
       empty.classList.add('visible');
       return;
     }
+
+    // Sort: newest publishedDate first, no-date to end
+    data.results.sort((a, b) => {
+      const da = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+      const db = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+      if (!a.publishedDate && !b.publishedDate) return 0;
+      if (!a.publishedDate) return 1;
+      if (!b.publishedDate) return -1;
+      return db - da;
+    });
 
     resultCount.textContent = `${data.results.length} Ergebnisse`;
     resultCount.classList.add('visible');

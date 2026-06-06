@@ -1,0 +1,588 @@
+# ============================================================
+# Richie Search — Power-Up Settings (2026-06-03)
+# TIER 1-4 komplett: Valkey, use_default_settings, Google/Bing,
+# Image Proxy, 16 neue Engines, DOI-Plugin, Metrics, Limiter
+# ============================================================
+
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: Richie Search
+  privacypolicy_url: false
+  donation_url: false
+  contact_url: false
+  enable_metrics: true
+  open_metrics: 'hermes-search-metrics'
+
+brand:
+  docs_url: https://docs.searxng.org/
+  public_instances: https://searx.space
+  wiki_url: https://github.com/searxng/searxng/wiki
+  issue_url: https://github.com/searxng/searxng/issues
+
+search:
+  safe_search: 0
+  autocomplete: google
+  autocomplete_min: 2
+  favicon_resolver: google
+  default_lang: de
+  ban_time_on_fail: 1
+  ban_time_on_fail: 1
+  suspended_times:
+    SearxEngineAccessDenied: 60
+    SearxEngineCaptcha: 300
+    SearxEngineTooManyRequests: 60
+    SearxEngineCaptcha: 300
+    SearxEngineAccessDenied: 60
+    SearxEngineCaptcha: 300
+  formats:
+  - html
+  - json
+
+server:
+  port: 8888
+  bind_address: 127.0.0.1
+  base_url: https://search.richie.fyi
+  limiter: false
+  public_instance: false
+  secret_key: sKIQsi0aXkdUiMy60Eu2A18Mi4p7YyK
+  image_proxy: true
+  http_protocol_version: '1.1'
+  method: GET
+  default_http_headers:
+    X-Content-Type-Options: nosniff
+    X-Download-Options: noopen
+    X-Robots-Tag: noindex, nofollow
+    Referrer-Policy: no-referrer
+
+valkey:
+  url: redis://searxng-valkey:6379/0
+
+ui:
+  templates_path: ''
+  query_in_title: false
+  default_theme: simple
+  center_alignment: false
+  default_locale: de
+  results_on_new_tab: true
+  theme_args:
+    simple_style: auto
+  search_on_category_select: true
+  hotkeys: vim
+  url_formatting: full
+
+outgoing:
+  request_timeout: 4.0
+  max_request_timeout: 9.0
+  useragent_suffix: ''
+  pool_connections: 150
+  pool_maxsize: 30
+  enable_http2: true
+
+plugins:
+  searx.plugins.calculator.SXNGPlugin:
+    active: true
+  searx.plugins.infinite_scroll.SXNGPlugin:
+    active: true
+  searx.plugins.hash_plugin.SXNGPlugin:
+    active: true
+  searx.plugins.self_info.SXNGPlugin:
+    active: true
+  searx.plugins.unit_converter.SXNGPlugin:
+    active: true
+  searx.plugins.ahmia_filter.SXNGPlugin:
+    active: true
+  searx.plugins.hostnames.SXNGPlugin:
+    active: true
+  searx.plugins.time_zone.SXNGPlugin:
+    active: true
+  searx.plugins.tracker_url_remover.SXNGPlugin:
+    active: true
+  searx.plugins.url_rewrite.SXNGPlugin:
+    active: true
+  searx.plugins.oa_doi_rewrite.SXNGPlugin:
+    active: true
+  searx.plugins.tor_check.SXNGPlugin:
+    active: true
+
+categories_as_tabs:
+  general: null
+  images: null
+  videos: null
+  news: null
+  map: null
+  music: null
+  it: null
+  science: null
+  files: null
+  social media: null
+
+engines:
+# === REAKTIVIERT: Google & Bing (waren disabled) ===
+- name: google
+  engine: google
+  shortcut: go
+  use_mobile_ui: false
+  categories:
+  - general
+  - web
+  weight: 1
+  time_range_support: true
+  paging: true
+
+- name: bing
+  engine: bing
+  shortcut: bi
+  categories:
+  - general
+  - web
+  weight: 1
+  time_range_support: true
+  paging: true
+
+- name: bing images
+  engine: bing_images
+  shortcut: bii
+  categories:
+  - images
+
+- name: bing news
+  engine: bing_news
+  shortcut: bin
+  categories:
+  - news
+
+- name: google news
+  engine: google_news
+  shortcut: gn
+  categories:
+  - news
+  paging: false
+  time_range_support: false
+  weight: 2
+
+- name: bing videos
+  engine: bing_videos
+  shortcut: biv
+  categories:
+  - videos
+
+# === BESTEHENDE ENGINES (optimiert) ===
+- name: brave
+  engine: brave
+  shortcut: br
+  time_range_support: true
+  paging: true
+  categories:
+  - general
+  - web
+  brave_category: search
+  weight: 2
+
+- name: brave.images
+  engine: brave
+  network: brave
+  shortcut: brimg
+  categories:
+  - images
+  - web
+  brave_category: images
+
+- name: brave.videos
+  engine: brave
+  network: brave
+  shortcut: brvid
+  categories:
+  - videos
+  - web
+  brave_category: videos
+
+- name: brave.news
+  engine: brave
+  network: brave
+  shortcut: brnews
+  categories: news
+  brave_category: news
+
+- name: startpage
+  engine: startpage
+  shortcut: sp
+  startpage_categ: web
+  categories:
+  - general
+  - web
+  weight: 2
+
+- name: duckduckgo
+  engine: duckduckgo
+  shortcut: ddg
+  categories:
+  - general
+  - web
+  weight: 2
+
+- name: duckduckgo images
+  engine: duckduckgo_images
+  shortcut: ddgi
+  categories:
+  - images
+  disabled: true
+
+- name: tagesschau
+  engine: tagesschau
+  use_source_url: true
+  shortcut: ts
+
+- name: chefkoch
+  engine: chefkoch
+  shortcut: chef
+
+- name: wikipedia
+  engine: wikipedia
+  shortcut: wp
+  display_type:
+  - infobox
+  categories:
+  - general
+  weight: 3
+
+- name: wikinews
+  engine: mediawiki
+  shortcut: wn
+  categories:
+  - news
+  - wikimedia
+  base_url: https://{language}.wikinews.org/
+  search_type: text
+  srsort: create_timestamp_desc
+
+- name: wiktionary
+  engine: mediawiki
+  shortcut: wt
+  categories:
+  - dictionaries
+  - wikimedia
+  base_url: https://{language}.wiktionary.org/
+  search_type: text
+
+- name: wikicommons.images
+  engine: wikicommons
+  shortcut: wci
+  categories: images
+  wc_search_type: image
+
+- name: wikicommons.videos
+  engine: wikicommons
+  shortcut: wcv
+  categories: videos
+  wc_search_type: video
+
+- name: wikicommons.audio
+  engine: wikicommons
+  shortcut: wca
+  categories: music
+  wc_search_type: audio
+
+- name: wikicommons.files
+  engine: wikicommons
+  shortcut: wcf
+  categories: files
+  wc_search_type: file
+
+- name: arch linux wiki
+  engine: archlinux
+  shortcut: al
+
+- name: stackoverflow
+  engine: stackexchange
+  shortcut: st
+  api_site: stackoverflow
+  categories:
+  - it
+  - q&a
+
+- name: docker hub
+  engine: docker_hub
+  shortcut: dh
+  categories:
+  - it
+  - packages
+
+- name: pypi
+  shortcut: pypi
+  engine: pypi
+
+- name: arxiv
+  engine: arxiv
+  shortcut: arx
+
+- name: semantic scholar
+  engine: semantic_scholar
+  shortcut: se
+
+- name: pubmed
+  engine: pubmed
+  shortcut: pub
+
+- name: unsplash
+  engine: unsplash
+  shortcut: us
+
+- name: openverse
+  engine: openverse
+  categories: images
+  shortcut: opv
+
+- name: deviantart
+  engine: deviantart
+  shortcut: da
+  timeout: 3.0
+
+- name: flickr
+  engine: flickr
+  shortcut: fl
+  categories: images
+  disabled: true
+
+- name: youtube
+  shortcut: yt
+  engine: youtube_noapi
+
+- name: dailymotion
+  engine: dailymotion
+  shortcut: dm
+
+- name: vimeo
+  engine: vimeo
+  shortcut: vm
+
+- name: openstreetmap
+  engine: openstreetmap
+  shortcut: osm
+
+- name: reuters
+  engine: reuters
+  shortcut: reu
+
+- name: currency
+  engine: currency_convert
+  shortcut: cc
+
+- name: dictzone
+  engine: dictzone
+  shortcut: dc
+
+- name: wordnik
+  engine: wordnik
+  shortcut: wnik
+  timeout: 5.0
+
+- name: pdbe
+  engine: pdbe
+  shortcut: pdb
+
+- name: bandcamp
+  engine: bandcamp
+  shortcut: bc
+  categories: music
+
+- name: soundcloud
+  engine: soundcloud
+  shortcut: sc
+
+- name: radio browser
+  engine: radio_browser
+  shortcut: rb
+
+- name: piratebay
+  engine: piratebay
+  shortcut: tpb
+  url: https://thepiratebay.org/
+  timeout: 3.0
+
+- name: solidtorrents
+  engine: solidtorrents
+  shortcut: solid
+  timeout: 4.0
+  base_url:
+  - https://solidtorrents.to
+  - https://bitsearch.to
+
+- name: bt4g
+  engine: bt4g
+  shortcut: bt4g
+
+- name: tootfinder
+  engine: tootfinder
+  shortcut: toot
+
+- name: wttr.in
+  engine: wttr
+  shortcut: wttr
+  timeout: 9.0
+
+- name: sepiasearch
+  engine: sepiasearch
+  shortcut: sep
+
+- name: artic
+  engine: artic
+  shortcut: arc
+  timeout: 4.0
+
+- name: photon
+  engine: photon
+  shortcut: ph
+
+- name: ahmia
+  engine: ahmia
+  timeout: 20.0
+  categories: onions
+  enable_http: true
+  shortcut: ah
+
+# === TIER 2: 16 NEUE HIGH-VALUE ENGINES ===
+- name: mojeek
+  engine: mojeek
+  shortcut: mj
+  categories:
+  - general
+  - web
+  weight: 1
+  time_range_support: true
+  paging: true
+
+- name: qwant
+  engine: qwant
+  shortcut: qw
+  categories:
+  - general
+  - web
+  weight: 1
+
+- name: marginalia
+  engine: marginalia
+  shortcut: mg
+  categories:
+  - general
+  - web
+  weight: 1
+  timeout: 4.0
+
+- name: presearch
+  engine: presearch
+  shortcut: ps
+  categories:
+  - general
+  - web
+  weight: 1
+
+- name: mwmbl
+  engine: mwmbl
+  shortcut: mw
+  categories:
+  - general
+  - web
+  weight: 1
+
+- name: github code
+  engine: github_code
+  shortcut: ghc
+  categories:
+  - it
+
+- name: huggingface
+  engine: huggingface
+  shortcut: hf
+  categories:
+  - science
+  - it
+
+- name: openalex
+  engine: openalex
+  shortcut: oa
+  categories:
+  - science
+
+- name: library of congress
+  engine: loc
+  shortcut: loc
+  categories:
+  - general
+  - science
+
+- name: core
+  engine: core
+  shortcut: core
+  categories:
+  - science
+
+- name: crossref
+  engine: crossref
+  shortcut: cr
+  categories:
+  - science
+
+- name: lemmy
+  engine: lemmy
+  shortcut: lm
+  categories:
+  - social media
+
+- name: mastodon
+  engine: mastodon
+  shortcut: ms
+  categories:
+  - social media
+
+- name: odysee
+  engine: odysee
+  shortcut: od
+  categories:
+  - videos
+
+- name: geizhals
+  engine: geizhals
+  shortcut: gz
+  categories:
+  - general
+
+- name: moviepilot
+  engine: moviepilot
+  shortcut: mp
+  categories:
+  - general
+
+doi_resolvers:
+  oadoi.org: https://oadoi.org/
+  doi.org: https://doi.org/
+  sci-hub.se: https://sci-hub.se/
+  sci-hub.st: https://sci-hub.st/
+  sci-hub.ru: https://sci-hub.ru/
+default_doi_resolver: oadoi.org
+
+url_rewrite:
+  rules:
+  - pattern: ^https?://(?:www\.)?facebook\.com/.*
+    repl: false
+  - pattern: ^https?://(?:www\.)?instagram\.com/.*
+    repl: false
+  - pattern: ^https?://(?:www\.)?tiktok\.com/.*
+    repl: false
+  - pattern: ^https?://(?:www\.)?reddit\.com(?P<path>/.*)?$
+    repl: https://old.reddit.com\g<path>
+  - pattern: ^https?://(?:www\.)?medium\.com(?P<path>/.*)?$
+    repl: https://freedium.cfd\g<path>
+  - pattern: ^(?P<url>https://(?:.*\.)?wikipedia\.org/.*)$
+    repl: \g<url>
+    priority: high
+    replace_url: false
+  - pattern: ^(?P<url>https://(?:.*\.)?stackoverflow\.com/.*)$
+    repl: \g<url>
+    priority: high
+    replace_url: false
+  - pattern: ^(?P<url>https://(?:.*\.)?github\.com/.*)$
+    repl: \g<url>
+    priority: high
+    replace_url: false
