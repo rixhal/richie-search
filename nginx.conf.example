@@ -1,0 +1,99 @@
+server {
+    listen 80;
+    listen 8082;
+    server_name search.richie.fyi;
+
+    # Shared: inject custom.css into all SearXNG HTML responses
+    sub_filter '</head>' '<link rel="stylesheet" href="/custom.css"></head>';
+    sub_filter_once on;
+    sub_filter_types text/html;
+
+    # Custom CSS file
+    location /custom.css {
+        alias /var/www/search.richie.fyi/static/custom.css;
+        add_header Content-Type "text/css";
+        sub_filter_types "";  # disable sub_filter for CSS
+    }
+
+    # API calls from custom frontend — rewrite /api/* → /* and proxy to SearXNG
+    location /api/ {
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 10s;
+        proxy_connect_timeout 5s;
+        sub_filter_types "";  # no sub_filter for API JSON responses
+    }
+
+    # SearXNG static assets (themes, JS, CSS)
+    location /static/ {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        sub_filter_types "";  # no sub_filter for static files
+    }
+
+    # SearXNG metadata endpoints
+    location /opensearch.xml {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        sub_filter_types "";
+    }
+
+    location /manifest.json {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        sub_filter_types "";
+    }
+
+    # Custom Frontend — serve index.html for the landing page
+    location = / {
+        root /var/www/search.richie.fyi;
+        try_files /index.html =404;
+        add_header Cache-Control "no-store";
+        sub_filter_types "";  # no sub_filter for our own HTML
+    }
+
+    # SearXNG HTML pages — custom.css injected via server-level sub_filter
+    location /preferences {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /info {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /search {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 10s;
+        proxy_connect_timeout 5s;
+    }
+
+    # Fallback: everything else to SearXNG
+    location / {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 10s;
+        proxy_connect_timeout 5s;
+    }
+}

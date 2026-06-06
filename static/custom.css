@@ -1,0 +1,55 @@
+/* === Richie Search — Red Theme === */
+
+/* Override SearXNG CSS variables to match brand red */
+:root.theme-auto,
+:root.theme-dark {
+  --color-base-font: #ddd !important;
+  --color-url-font: #ff5c5c !important;
+  --color-url-visited-font: #cc4444 !important;
+  --color-btn-background: #e33 !important;
+  --color-btn-font: #fff !important;
+  --color-search-border: #e33 !important;
+  --color-search-background-hover: #e33 !important;
+}
+
+/* Autocomplete suggestions — brighter, red hover */
+.autocomplete {
+  font-size: 1rem !important;
+}
+.autocomplete li {
+  color: #eee !important;
+  opacity: 1 !important;
+  padding: 10px 14px !important;
+  font-size: 1.05rem !important;
+  line-height: 1.4 !important;
+  background: #2b2e36 !important;
+}
+.autocomplete li:hover,
+.autocomplete li.selected,
+.autocomplete li:focus,
+.autocomplete li.active {
+  background: #e33 !important;
+  color: #fff !important;
+}
+
+/* Search box — red accent */
+#q {
+  border: 2px solid var(--color-search-border) !important;
+  border-radius: 8px !important;
+}
+#q:focus {
+  border-color: #e33 !important;
+  box-shadow: 0 0 0 2px rgba(238, 51, 51, 0.2) !important;
+}
+
+/* Results readability */
+article.result {
+  padding: 1rem 1.2rem !important;
+}
+.result .content {
+  color: #ccc !important;
+  line-height: 1.5 !important;
+}
+.result h3 a {
+  font-size: 1.1rem !important;
+}
