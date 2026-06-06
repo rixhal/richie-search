@@ -1,78 +1,90 @@
-# Richie Search — Ausbau-Roadmap
+# Richie Search — Ausbau-Roadmap (Frontend + Backend)
 
-> Custom Dark-Theme Suchmaschine auf SearXNG. Stand: Juni 2026.
-> Single-File HTML, DM Sans + JetBrains Mono, rotes Brand-Theme.
-
----
-
-## 🔴 Phase 1 — Bugfixes & Stabilität
-
-- [ ] **Seitennavigation (Pagination)** — aktuell nur erste Seite. SearXNG gibt `pageno`/`next` im JSON. Buttons: „Mehr laden" oder Seitenzahlen.
-- [ ] **Fehler bei leeren Bild-/Video-Ergebnissen** — `renderImages`/`renderVideos` zeigen kein Empty-State wenn `img_src`/`thumbnail` fehlt. Fallback oder „Keine Medien" anzeigen.
-- [ ] **Such-Timeout & Retry** — `doSearch()` hat kein Timeout. `AbortController` + 10s Limit + „Erneut versuchen"-Button.
-- [ ] **URL-State robust** — `time_range` fehlt im URL-Parameter (wird nicht restored). Query-Parameter mit Time-Range syncen.
+> Custom Dark-Theme Suchmaschine. search.richie.fyi.
+> Stand: Juni 2026. Single-File HTML, SearXNG Docker, NGINX.
 
 ---
 
-## 🟡 Phase 2 — UX & Komfort
+## 🔴 Phase 1 — Search Quality First
 
-- [ ] **Favicon + Manifest** — eigenes Icon (rotes R auf Schwarz) statt SearXNG-Favicon. `manifest.json` für PWA.
-- [ ] **Dark/Light Toggle** — CSS-Variablen sind schon da. Button in Footer/Header der `data-theme` toggled. In `localStorage` speichern.
-- [ ] **Suchverlauf** — letzte 10 Suchen in `localStorage`. Dropdown beim Fokussieren des leeren Suchfelds.
-- [ ] **Keyboard-Navigation in Ergebnissen** — Tab/Arrow durch Result-Cards, Enter zum Öffnen. `j`/`k` wie bei Vimium.
-- [ ] **Responsive Grid-Polish** — Bilder-Kacheln auf kleinen Screens 2-spaltig statt 1. Video-Cards Höhe normalisieren.
-- [ ] **Lazy Load Thumbnails** — aktuell lädt `loading="lazy"` erst ab Bild 12. Alle Bilder außer den ersten 4 auf `lazy`.
-
----
-
-## 🟢 Phase 3 — Features
-
-- [ ] **Custom Search Shortcuts** — `!yt Suchbegriff` → YouTube-Suche, `!gh` → GitHub, `!wiki` → Wikipedia, `!ddg` → DuckDuckGo. Bang-Syntax parsen + Redirect.
-- [ ] **Safesearch-Toggle** — Button neben Zeitfilter: Aus/Moderat/Strikt → `safesearch=0|1|2` Parameter.
-- [ ] **Ergebnis-Teilen** — „Link kopieren"-Button pro Result-Card. URL in Zwischenablage mit Titel.
-- [ ] **Instant Answers** — SearXNG liefert `answers[]` und `infoboxes[]`. Oben als Card rendern (wie Google Knowledge Panel).
-- [ ] **Sprach-Filter** — Dropdown neben Zeitfilter: `language=de|en|auto`. Aktuell hardcoded `de`.
+- [ ] **News-Sortierung** — `publishedDate`-basierte Sortierung (neueste zuerst) im Frontend. Ohne Datum → ans Ende. `time_range`-Filter in SearXNG fixen.
+- [ ] **Google News aktivieren** — `google_news` Engine in `settings.yml` (liefert konsistentere Ergebnisse als bing news)
+- [ ] **Pagination** — Seiten-Navigation oder „Mehr laden"-Button. SearXNG `pageno` Parameter.
+- [ ] **Leere Medien-Fallback** — Bilder/Videos ohne Thumbnail zeigen Platzhalter, nicht einfach nichts.
+- [ ] **Timeout + Retry** — `AbortController` mit 10s Limit + „Erneut versuchen".
+- [ ] **URL-State-Fix** — `time_range` in Browser-URL syncen (Back-Button-restore).
 
 ---
 
-## 🔵 Phase 4 — Backend & Engine-Tuning
+## 🟡 Phase 2 — UX & Alltag
 
-- [ ] **SearXNG `settings.yml` optimieren** — Nur relevante Engines aktivieren (Google, Brave, DDG, Wikipedia, Reddit, GitHub, StackOverflow, etc.). Deaktivierte Engines = schneller.
-- [ ] **Eigene Engines hinzufügen** — `searxng_data` checken ob SearXNG Custom-Engine-Support hat. Z.B. interne Dienste oder Nischen-Suchmaschinen.
-- [ ] **Caching-Layer** — NGINX `proxy_cache` für SearXNG-API-Responses (5min TTL). Reduziert Last bei Mehrfach-Suchen.
-- [ ] **Healthcheck-Endpoint** — `/api/health` in NGINX, der SearXNG `/healthz` anpingt. Für Monitoring/Cron.
+- [ ] **Favicon + PWA-Manifest** — Eigenes Icon (rotes R), `manifest.json`.
+- [ ] **Dark/Light Toggle** — `data-theme` togglen, `localStorage` persist.
+- [ ] **Suchverlauf** — Letzte 10 Queries in `localStorage`, Dropdown bei Fokus.
+- [ ] **„Link kopieren" pro Result** — Teilen-Button, URL in Zwischenablage.
+- [ ] **Safesearch-Toggle** — Dropdown: Aus/Moderat/Strikt → `safesearch=0|1|2`.
+- [ ] **Sprach-Filter** — Dropdown: `de|en|auto`. Aktuell hardcoded `de`.
+- [ ] **Responsive Grid** — Mobile: Bilder 2-spaltig, Video-Karten gleichmäßig.
 
 ---
 
-## ⚫ Phase 5 — nice to have
+## 🟢 Phase 3 — Productivity Features
 
-- [ ] **Audio Search** — SearXNG supported Audio-Kategorie? Prüfen. UI: Mini-Player in Result-Cards.
-- [ ] **Torrent/Magnet-Ergebnisse** — Files-Kategorie checken. Magnet-Links als Button rendern.
-- [ ] **Export-Funktion** — Ergebnisse als JSON/CSV/OPML exportieren. Button in Footer.
-- [ ] **Browser-Such-Plug-in** — OpenSearch-Description anpassen (ist schon da, aber auf SearXNG-Default). Eigenes Icon, eigener Name.
-- [ ] **Mehrsprachiges UI** — `data-lang` Attribute. Deutsch/Englisch. `navigator.language` Auto-Detect.
+- [ ] **Bang-Search** — `!yt Suchbegriff` → YouTube, `!gh` → GitHub, `!wiki` → Wikipedia, `!ddg` → DuckDuckGo, `!px` → Perplexity. Client-seitiger Redirect.
+- [ ] **Instant Answers** — SearXNG `answers[]` + `infoboxes[]` als Hero-Card rendern (Wiki-Infobox, Calculator, Unit-Converter).
+- [ ] **Research Collections** — Ergebnisse in benannte Sammlungen speichern (localStorage JSON). Export als Markdown.
+- [ ] **Diff-Search-Indikator** — Bei wiederholten Queries: „3 neue Ergebnisse seit gestern"-Badge.
+- [ ] **Keyboard-Nav** — `j`/`k`/`Enter` in Result-Cards, `/` für Suchfeld-Fokus.
+
+---
+
+## 🔵 Phase 4 — Backend-Tuning
+
+- [ ] **Engine-Optimierung** — Nur relevante Engines aktiv. `google`, `google_news`, `brave`, `ddg`, `wikipedia`, `github`, `stackoverflow`, `reddit`. Rest deaktiviert = schneller.
+- [ ] **NGINX-Caching** — `proxy_cache` für API-Responses (30s–5min TTL je nach Kategorie).
+- [ ] **Source Trust Tiers** — ArXiv/Wikipedia grün, Reddit/Social gelb, Sonstige grau. CSS-Indikator pro Card.
+- [ ] **Export-Tools** — Ergebnisse als JSON/CSV/OPML + „In Obsidian speichern"-Button.
+
+---
+
+## ⚫ Phase 5 — Research Engine (Cron/Hermes)
+
+> Diese Features leben NICHT im Web-Frontend, sondern als Hermes-Skills/Crons.
+> Siehe [RESEARCH.md](RESEARCH.md).
+
+| Konzept | Beschreibung |
+|----------|-------------|
+| Self-Improving Search Loop | Seed-Query → Entitäten extrahieren → 3 neue Queries → iterieren → Dossier |
+| Knowledge Graph | Entitäten + Beziehungen aus Suchergebnissen über Zeit aufbauen |
+| Adversarial Search | Gezielte Gegen-Queries, Gegenargumente synthetisieren |
+| Emergence Detection | Semantische Cluster-Erkennung über unabhängige Quellen |
+| Research Replay | Session-Aufzeichnung: Queries, Pfade, Erkenntnisse, Diffs |
+| Predictive Research | Trend-Vorhersage aus Publikations-Frequenz + Cross-References |
+| LLM Summary | Hermes fasst Top-5 URLs zusammen (spart Perplexity-Tokens) |
+| Perplexity Deep-Dive | Query + Quell-URLs automatisch an Perplexity weiterleiten |
 
 ---
 
 ## 📋 Done
 
-- [x] Rotes Brand-Theme (Custom CSS + SearXNG CSS-Variablen)
-- [x] SearXNG Docker Backend
+- [x] Rotes Brand-Theme (Custom CSS + SearXNG-Variablen)
+- [x] SearXNG Docker Backend + Valkey
 - [x] NGINX Reverse Proxy mit API-Rewrite
-- [x] Cloudflare Tunnel (search.richie.fyi)
+- [x] Cloudflare Tunnel
 - [x] Kategorie-Tabs (10 Kategorien)
-- [x] Zeitfilter (24h/Woche/Monat/Jahr)
+- [x] Zeitfilter
 - [x] Autocomplete
 - [x] GitHub Repo (rixhal/richie-search)
-- [x] Mobile-Responsive Basis-Layout
-- [x] Bilder-Grid + Video-Karten Rendering
+- [x] Mobile-Responsive Basis
+- [x] Bilder-Grid + Video-Karten
+- [x] Google + Bing + Brave + Startpage + DuckDuckGo Engines
 
 ---
 
 ## 🔧 Dev-Notizen
 
-- **Deployment:** `sudo cp /tmp/... /var/www/search.richie.fyi/` → `sudo nginx -s reload`
-- **Backups:** `.bak.YYYYMMDD-HHMMSS` im selben Verzeichnis, per `.gitignore` ausgeschlossen
-- **CF-Cache:** Cloudflare cached statische Assets. Nach Deploy: `?v=$(date +%s)` zum Testen, Purge via API
-- **SearXNG Version:** `2026.5.26` (Docker: `searxng-privacy:latest`)
-- **Kein Build-Step:** Alles Single-File. Kein npm, kein Bundler, kein Framework.
+- **Deploy:** `sudo cp /tmp/... /var/www/search.richie.fyi/` → `sudo nginx -s reload`
+- **Backups:** `.bak.YYYYMMDD-HHMMSS`, per `.gitignore` ausgeschlossen
+- **CF-Cache:** `?v=$(date +%s)` zum Cache-Busting, Purge via API
+- **SearXNG:** `2026.5.26`, Docker `searxng-privacy:latest`
+- **Kein Build-Step:** Single-File HTML, kein npm/Bundler/Framework
