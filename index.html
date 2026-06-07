@@ -571,6 +571,38 @@
   .footer a { color: #ccc; text-decoration: none; }
   .footer a:hover { color: var(--brand); }
 
+  /* ========== NEWS FILTER ========== */
+  .news-filter {
+    display: flex;
+    gap: 8px;
+    margin-top: 0.5rem;
+    padding: 0 4px;
+    align-items: center;
+  }
+  .news-filter input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: #ccc;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+  }
+  .news-filter input:focus { border-color: var(--brand); }
+  .filter-btn {
+    background: var(--brand);
+    border: none;
+    color: #0a0a0a;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
   @keyframes fadeUp {
     from { opacity:0; transform:translateY(8px); }
     to { opacity:1; transform:translateY(0); }
@@ -633,6 +665,10 @@
       </select>
     </div>
   </nav>
+  <div class="news-filter" id="newsFilter" style="display:none">
+    <input type="text" id="filterInput" placeholder="Wörter filtern (Komma-getrennt)…" autocomplete="off">
+    <button id="filterSave" class="filter-btn">✓</button>
+  </div>
 
   <div class="result-count" id="resultCount" role="status" aria-live="polite"></div>
   <div class="loading" id="loading" role="status" aria-live="polite" aria-busy="true"><div class="loader"></div></div>
@@ -685,6 +721,9 @@ document.querySelectorAll('.cat-btn').forEach(b => {
     document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     currentCat = b.dataset.cat;
+    // Show news filter for news category
+    const nf = document.getElementById('newsFilter');
+    nf.style.display = currentCat === 'news' ? 'flex' : 'none';
     // Default to "day" for news
     if (currentCat === 'news') {
       const tr = document.getElementById('timeRange');
@@ -694,16 +733,57 @@ document.querySelectorAll('.cat-btn').forEach(b => {
   });
 });
 
+// Init news filter on load
+(function initNewsFilter() {
+  const nf = document.getElementById('newsFilter');
+  const fi = document.getElementById('filterInput');
+  const fs = document.getElementById('filterSave');
+  if (currentCat === 'news') nf.style.display = 'flex';
+  // Load saved filter
+  fi.value = localStorage.getItem('newsFilter') || '';
+  fs.addEventListener('click', () => {
+    localStorage.setItem('newsFilter', fi.value.trim());
+    if (input.value.trim() && currentCat === 'news') doSearch();
+  });
+  fi.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { fs.click(); e.preventDefault(); }
+  });
+})();
+
 // Time range change re-triggers search
 document.getElementById('timeRange').addEventListener('change', () => {
   if (input.value.trim()) doSearch();
 });
 
-// Search form
+// Search form — handle !bangs and normal search
 form.addEventListener('submit', e => {
   e.preventDefault();
   closeSuggestions();
-  if (input.value.trim()) doSearch();
+  const q = input.value.trim();
+  if (!q) return;
+
+  // !bang shortcuts — redirect to target search engine
+  const bangs = {
+    '!yt':   q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`,
+    '!gh':   q => `https://github.com/search?q=${encodeURIComponent(q)}`,
+    '!wiki': q => `https://de.wikipedia.org/wiki/${encodeURIComponent(q.replace(/ /g,'_'))}`,
+    '!ddg':  q => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
+    '!px':   q => `https://www.perplexity.ai/?q=${encodeURIComponent(q)}`,
+    '!map':  q => `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`,
+    '!npm':  q => `https://www.npmjs.com/search?q=${encodeURIComponent(q)}`,
+    '!py':   q => `https://pypi.org/search/?q=${encodeURIComponent(q)}`,
+    '!so':   q => `https://stackoverflow.com/search?q=${encodeURIComponent(q)}`,
+    '!img':  q => `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(q)}`,
+  };
+
+  const match = q.match(/^!(\w+)\s+(.*)/);
+  if (match) {
+    const [_, bang, rest] = match;
+    const fn = bangs['!' + bang];
+    if (fn && rest) { window.location.href = fn(rest); return; }
+  }
+
+  doSearch();
 });
 
 // Keyboard shortcuts
@@ -883,6 +963,24 @@ async function doSearch() {
       if (!b.publishedDate) return -1;
       return db - da;
     });
+
+    // Apply news filter (case-insensitive title match)
+    if (currentCat === 'news') {
+      const raw = (localStorage.getItem('newsFilter') || '').trim();
+      if (raw) {
+        const words = raw.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+        const before = data.results.length;
+        data.results = data.results.filter(r =>
+          !words.some(w => (r.title || '').toLowerCase().includes(w))
+        );
+        if (data.results.length === 0) {
+          empty.classList.add('visible');
+          resultCount.textContent = `${before} gefiltert → 0`;
+          resultCount.classList.add('visible');
+          return;
+        }
+      }
+    }
 
     resultCount.textContent = `${data.results.length} Ergebnisse`;
     resultCount.classList.add('visible');
