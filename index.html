@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0a0a0a">
 <meta name="color-scheme" content="dark">
 <title>Richie Search</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23e33'/><text x='16' y='24' text-anchor='middle' font-family='system-ui' font-weight='700' font-size='22' fill='%230a0a0a'>R</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap');
 
@@ -556,6 +557,24 @@
 
   .result-count.visible { display: block; }
 
+  .load-more {
+    display: none;
+    width: 100%;
+    padding: 12px;
+    margin-top: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .load-more:hover { background: var(--surface-hover); }
+  .load-more:disabled { opacity: 0.4; cursor: wait; }
+  .load-more.visible { display: block; }
+
   /* ========== FOOTER ========== */
   .footer {
     margin-top: auto;
@@ -680,6 +699,7 @@
   <div class="results" id="results" role="region" aria-live="polite" aria-label="Suchergebnisse"></div>
   <div class="results-grid" id="resultsGrid"></div>
   <div class="results-videos" id="resultsVideos"></div>
+  <button class="load-more" id="loadMore" onclick="loadMoreResults()">Mehr laden</button>
 </main>
 
 <footer class="footer" role="contentinfo">
@@ -706,6 +726,10 @@ let currentCat = 'general';
 let activeIndex = -1;
 let suggestionData = [];
 let autocompleteTimer = null;
+let currentPage = 1;
+let lastQuery = '';
+let abortController = null;
+const loadMoreBtn = document.getElementById('loadMore');
 
 // Init from URL
 if (searchParams.has('q')) {
@@ -921,28 +945,43 @@ function clearResults() {
   empty.classList.remove('visible');
 }
 
-async function doSearch() {
+async function doSearch(page = 1) {
   const query = input.value.trim();
   if (!query) return;
   closeSuggestions();
 
-  const url = new URL(window.location);
-  url.searchParams.set('q', query);
-  if (currentCat !== 'general') url.searchParams.set('categories', currentCat);
-  window.history.replaceState({}, '', url);
+  // Abort previous request
+  if (abortController) abortController.abort();
+  abortController = new AbortController();
+  const signal = abortController.signal;
 
-  app.classList.add('has-results');
-  clearResults();
+  if (page === 1) {
+    // New search — reset
+    currentPage = 1;
+    lastQuery = query;
+    const url = new URL(window.location);
+    url.searchParams.set('q', query);
+    if (currentCat !== 'general') url.searchParams.set('categories', currentCat);
+    window.history.replaceState({}, '', url);
+    app.classList.add('has-results');
+    clearResults();
+  }
+
+  loadMoreBtn.classList.remove('visible');
   loading.classList.add('visible');
   btn.disabled = true;
 
   try {
-    let apiUrl = `/api/search?q=${encodeURIComponent(query)}&format=json&categories=${currentCat}&language=de`;
+    let apiUrl = `/api/search?q=${encodeURIComponent(query)}&format=json&categories=${currentCat}&language=de&pageno=${page}`;
     // News: use tagesschau exclusively (has actual dates, current German news)
     if (currentCat === 'news') apiUrl += '&engines=tagesschau';
     const tr = document.getElementById('timeRange');
     if (tr && tr.value && currentCat !== 'news') apiUrl += `&time_range=${tr.value}`;
-    const resp = await fetch(apiUrl);
+
+    const timeoutId = setTimeout(() => abortController.abort(), 10000);
+    const resp = await fetch(apiUrl, { signal });
+    clearTimeout(timeoutId);
+
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
     const data = await resp.json();
@@ -950,7 +989,8 @@ async function doSearch() {
     btn.disabled = false;
 
     if (!data.results || data.results.length === 0) {
-      empty.classList.add('visible');
+      if (page === 1) empty.classList.add('visible');
+      loadMoreBtn.classList.remove('visible');
       return;
     }
 
@@ -964,26 +1004,25 @@ async function doSearch() {
       return db - da;
     });
 
-    // Apply news filter (case-insensitive title match)
+    // Apply news filter
     if (currentCat === 'news') {
       const raw = (localStorage.getItem('newsFilter') || '').trim();
       if (raw) {
         const words = raw.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
-        const before = data.results.length;
         data.results = data.results.filter(r =>
           !words.some(w => (r.title || '').toLowerCase().includes(w))
         );
-        if (data.results.length === 0) {
-          empty.classList.add('visible');
-          resultCount.textContent = `${before} gefiltert → 0`;
-          resultCount.classList.add('visible');
-          return;
-        }
       }
     }
 
-    resultCount.textContent = `${data.results.length} Ergebnisse`;
+    const total = page === 1 ? data.results.length : (parseInt(resultCount.textContent) || 0) + data.results.length;
+    resultCount.textContent = `${total} Ergebnisse`;
     resultCount.classList.add('visible');
+
+    // Show load more if results returned
+    if (data.results.length >= 10) {
+      loadMoreBtn.classList.add('visible');
+    }
 
     const isImages = currentCat === 'images';
     const isVideos = currentCat === 'videos';
@@ -998,11 +1037,28 @@ async function doSearch() {
       renderWeb(data.results);
     }
   } catch (err) {
+    if (err.name === 'AbortError') {
+      errorEl.textContent = 'Zeitüberschreitung — erneut versuchen?';
+    } else {
+      errorEl.textContent = `Fehler: ${err.message}`;
+    }
+    errorEl.classList.add('visible');
     loading.classList.remove('visible');
     btn.disabled = false;
-    errorEl.textContent = `Fehler: ${err.message}`;
-    errorEl.classList.add('visible');
+    // Retry button
+    errorEl.onclick = () => { errorEl.classList.remove('visible'); doSearch(page); };
+    errorEl.style.cursor = 'pointer';
+    errorEl.title = 'Klicken zum Wiederholen';
   }
+}
+
+async function loadMoreResults() {
+  currentPage++;
+  loadMoreBtn.disabled = true;
+  loadMoreBtn.textContent = 'Lädt…';
+  await doSearch(currentPage);
+  loadMoreBtn.disabled = false;
+  loadMoreBtn.textContent = 'Mehr laden';
 }
 
 function renderWeb(items) {
